@@ -46,13 +46,14 @@ def Key_Stats(gather="Total Debt/Equity (mrq)"):
                                  'stock_p_change',
                                  'SP500',
                                  'sp500_p_change',
-                                 'Difference'])
+                                 'Difference',
+                                 'Status'])
 
     sp500_df = pd.DataFrame.from_csv('YAHOO_INDEX_GSPC.csv')
 
     ticker_list = []
 
-    for each_dir in stock_list_2[1:25]:
+    for each_dir in stock_list_2[1:]:
         each_file = sorted(os.listdir(each_dir))
         ticker = each_dir.split('/_KeyStats/')[1]
         ticker_list.append(ticker)
@@ -71,10 +72,16 @@ def Key_Stats(gather="Total Debt/Equity (mrq)"):
 
                 try:
                     try:
-
                         value = float(source.split(gather+':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
                     except Exception as e:
-                        print(str(e),ticker,file)
+                        try:
+                            value = (source.split(gather+':</td>\n<td class="yfnc_tabledata1">')[1].split('</td>')[0])
+                            # print(value)
+                            # value = float(value)
+                        except Exception as e:
+                            pass
+                            # print(str(e),ticker,file)
+
                     try:
                         sp500_date = datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d')
                         row = sp500_df[(sp500_df.index == sp500_date)]
@@ -85,8 +92,28 @@ def Key_Stats(gather="Total Debt/Equity (mrq)"):
                         row = sp500_df[(sp500_df.index == sp500_date)]
                         sp500_value = float(row["Adj Close"])
 
-                    stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
-                    print('stock_price:',stock_price,'ticker:',ticker)
+                    try:
+                        stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
+                    except Exception as e:
+                        # <span id="yfs_l10_afl">43.27</span>
+                        # print('str(e) = ',str(e),'ticker = ',ticker,'file = ',file)
+                        try:
+
+                            stock_price = (source.split('</small><big><b>')[1].split('</b></big>')[0])
+                            stock_price = re.search(r'(\d{1,8}\.\d{1,8})', stock_price)
+                            # print('stock_price before group(1)', stock_price)
+                            stock_price = float(stock_price.group(1))
+                            # print('stock_price AFTER group(1)', stock_price)
+
+                            # time.sleep(15)
+                        except Exception as e:
+                            stock_price = (source.split('<span class="time_rtq_ticker">')[1].split('</span>')[0])
+                            stock_price = re.search(r'(\d{1,8}\.\d{1,8})', stock_price)
+                            stock_price = float(stock_price.group(1))
+                            # print('Latest:', stock_price)
+                            # print('stock price Exception',str(e),'\nticker = ',ticker,'\nfile = ',file)
+                            # time.sleep(15)
+                    # print('stock_price:',stock_price,'ticker:',ticker)
 
                     if not starting_stock_value:
                         starting_stock_value = stock_price
