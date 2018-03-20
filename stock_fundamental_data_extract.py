@@ -155,6 +155,8 @@ def Key_Stats(gather=['Total Debt/Equity',
                                 value = float(value.replace('B',''))*1e9
                             elif 'M' in value:
                                 value = float(value.replace('M',''))*1e6
+                            elif 'K' in value:
+                                value = float(value.replace('K',''))*1e3
 
                             value_list.append(value)
 
